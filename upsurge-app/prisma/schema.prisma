@@ -1,0 +1,287 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id              String          @id @unique @default(uuid())
+  active          Boolean         @default(true)
+  whopId          String?         @unique
+  limit           Int             @default(3)
+  createdAt       DateTime        @default(now())
+  automations     Boolean         @default(false)
+  mainServiceId   String?
+  mainServiceType String?
+  WhopConnection  WhopConnection? @relation(fields: [whopId], references: [id])
+  Service         Service[]
+}
+
+model Reward {
+  id             String           @id @unique @default(uuid())
+  nickname       String
+  description    String
+  pointsRequired Int
+  serviceId      String
+  createdAt      DateTime         @default(now())
+  serviceType    ServiceType
+  active         Boolean          @default(true)
+  RedeemedReward RedeemedReward[]
+  Service        Service          @relation(fields: [serviceId, serviceType], references: [id, type])
+}
+
+model User {
+  id                  String           @default(uuid())
+  serviceId           String
+  points              Int              @default(0)
+  joinDate            DateTime         @default(now())
+  name                String           @default("")
+  username            String           @default("")
+  roles               String[]
+  profilePicUrl       String?
+  createdAt           DateTime         @default(now())
+  active              Boolean          @default(true)
+  totalPoints         Int              @default(0)
+  nickname            String           @default("")
+  serviceType         ServiceType
+  messageCountGoal    Int              @default(-1)
+  currentMessageCount Int              @default(0)
+  lastCurrentMessage  DateTime?
+  MessageCount        MessageCount[]
+  PointActivity       PointActivity[]
+  RedeemedReward      RedeemedReward[]
+  Service             Service          @relation(fields: [serviceId, serviceType], references: [id, type])
+  UserMessage         UserMessage[]
+
+  @@id([id, serviceId, serviceType])
+  @@unique([id, serviceId, serviceType])
+}
+
+model RedeemedReward {
+  id              String         @id @unique
+  processed       Boolean        @default(false)
+  serviceId       String
+  rewardId        String
+  userId          String
+  createdAt       DateTime       @default(now())
+  pointsUsed      Int
+  userServiceId   String
+  serviceType     ServiceType
+  processedAt     DateTime?
+  userServiceType ServiceType
+  PointActivity   PointActivity?
+  Reward          Reward         @relation(fields: [rewardId], references: [id])
+  Service         Service        @relation(fields: [serviceId, serviceType], references: [id, type])
+  User            User           @relation(fields: [userId, userServiceId, userServiceType], references: [id, serviceId, serviceType])
+}
+
+model Service {
+  id                     String
+  companyId              String
+  connected              Boolean                 @default(false)
+  nickname               String
+  userRoles              String[]
+  setRoles               Boolean                 @default(false)
+  mainChannel            String                  @default("")
+  createdAt              DateTime                @default(now())
+  type                   ServiceType
+  logChannel             String                  @default("")
+  Log                    Log[]
+  MessageCountAutomation MessageCountAutomation?
+  MessageDropAutomation  MessageDropAutomation?
+  PointActivity          PointActivity[]
+  RedeemedReward         RedeemedReward[]
+  Reward                 Reward[]
+  Company                Company                 @relation(fields: [companyId], references: [id])
+  TimedDropAutomation    TimedDropAutomation?
+  User                   User[]
+
+  @@id([id, type])
+  @@unique([id, type])
+}
+
+model WhopConnection {
+  id        String   @id @unique
+  createdAt DateTime @default(now())
+  Company   Company?
+}
+
+model WhopDiscordAccess {
+  id               String   @id @unique
+  userId           String   @unique
+  discordToken     String
+  expiresAt        DateTime
+  discordTokenType String
+  shouldUpdate     Boolean  @default(true)
+  createdAt        DateTime @default(now())
+}
+
+model PointActivity {
+  id               String          @id @unique
+  type             ActivityType
+  reason           ActivityReason
+  points           Int
+  serviceId        String
+  userId           String
+  redeemedRewardId String?         @unique
+  createdAt        DateTime        @default(now())
+  userServiceId    String
+  serviceType      ServiceType
+  userServiceType  ServiceType
+  RedeemedReward   RedeemedReward? @relation(fields: [redeemedRewardId], references: [id])
+  Service          Service         @relation(fields: [serviceId, serviceType], references: [id, type])
+  User             User            @relation(fields: [userId, userServiceId, userServiceType], references: [id, serviceId, serviceType])
+}
+
+model MessageCountAutomation {
+  id           String         @id
+  serviceId    String
+  serviceType  ServiceType
+  lowerBounds  Int
+  upperBounds  Int
+  enabled      Boolean        @default(false)
+  spamDelay    Int            @default(30)
+  MessageCount MessageCount[]
+  Service      Service        @relation(fields: [serviceId, serviceType], references: [id, type])
+
+  @@unique([serviceId, serviceType])
+}
+
+model MessageDropAutomation {
+  id                String      @id
+  serviceId         String
+  serviceType       ServiceType
+  lowerBounds       Int
+  upperBounds       Int
+  currentCount      Int
+  goal              Int         @default(-1)
+  enabled           Boolean     @default(false)
+  amountLowerBounds Int
+  amountUpperBounds Int
+  Drop              Drop[]
+  Service           Service     @relation(fields: [serviceId, serviceType], references: [id, type])
+
+  @@unique([serviceId, serviceType])
+}
+
+model TimedDropAutomation {
+  id                String      @id
+  serviceId         String
+  serviceType       ServiceType
+  lowerBounds       Int
+  upperBounds       Int
+  nextDropTime      DateTime
+  enabled           Boolean     @default(false)
+  amountLowerBounds Int
+  amountUpperBounds Int
+  Drop              Drop[]
+  Service           Service     @relation(fields: [serviceId, serviceType], references: [id, type])
+
+  @@unique([serviceId, serviceType])
+}
+
+model UserMessage {
+  id              String      @id @unique
+  userId          String
+  userServiceId   String
+  createdAt       DateTime    @default(now())
+  channelId       String
+  userServiceType ServiceType
+  User            User        @relation(fields: [userId, userServiceId, userServiceType], references: [id, serviceId, serviceType])
+}
+
+model Drop {
+  id                      String                 @id @unique
+  channelId               String
+  amount                  Int
+  messageDropAutomationId String?
+  timedDropAutomationId   String?
+  createdAt               DateTime               @default(now())
+  MessageDropAutomation   MessageDropAutomation? @relation(fields: [messageDropAutomationId], references: [id])
+  TimedDropAutomation     TimedDropAutomation?   @relation(fields: [timedDropAutomationId], references: [id])
+}
+
+model MessageCount {
+  id                       String                 @unique
+  points                   Int                    @default(1)
+  messageCountAutomationId String
+  userId                   String
+  userServiceId            String
+  userServiceType          ServiceType
+  createdAt                DateTime               @default(now())
+  MessageCountAutomation   MessageCountAutomation @relation(fields: [messageCountAutomationId], references: [id])
+  User                     User                   @relation(fields: [userId, userServiceId, userServiceType], references: [id, serviceId, serviceType])
+}
+
+model Log {
+  id           String          @unique
+  focus        LogFocus
+  content      String
+  serviceId    String
+  serviceType  ServiceType
+  source       LogSource
+  data         Json?
+  action       LogAction
+  actionSource LogActionSource
+  createdAt    DateTime        @default(now())
+  Service      Service         @relation(fields: [serviceId, serviceType], references: [id, type])
+}
+
+enum ActivityReason {
+  system
+  admin
+  reward
+}
+
+enum ActivityType {
+  add
+  subtract
+}
+
+enum ServiceType {
+  discord
+}
+
+enum AutomationType {
+  MessageCount
+  Time
+}
+
+enum LogFocus {
+  points
+  rewards
+  users
+  redeemedRewards
+  automations
+  service
+}
+
+enum LogAction {
+  pointsGive
+  pointsRemove
+  rewardCreate
+  rewardUpdate
+  redemeedRewardsCreate
+  redeemedRewardUpdate
+  messageCountAutomationUpdate
+  messageDropAutomationUpdate
+  logChannelUpdate
+  mainChannelUpdate
+  rolesUpdate
+}
+
+enum LogActionSource {
+  user
+  admin
+  automation
+}
+
+enum LogSource {
+  discord
+  telegram
+  web
+}

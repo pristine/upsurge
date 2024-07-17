@@ -1,0 +1,17 @@
+{
+  "name": "@pristine/upserge-db",
+  "version": "0.0.2",
+  "dependencies": {
+    "@prisma/client": "^5.7.1"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^4.0.0",
+    "prisma": "^5.7.1",
+    "typescript": "^4.2.3"
+  },
+  "scripts": {
+    "db:introspect": "dotenv -- prisma introspect",
+    "db:generate": "dotenv -- prisma generate",
+    "postinstall": "tsc && cp src/index.d.ts dist/index.d.ts && npx prisma generate"
+  }
+}

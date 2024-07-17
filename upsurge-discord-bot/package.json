@@ -1,0 +1,43 @@
+{
+  "name": "upserge-discord-bot",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "tsc": "tsc -p tsconfig.json",
+    "start": "node ./dist/index.js",
+    "exec": "node dist/index.js",
+    "test": "mocha --paralell --exit --require \"ts-node/register\" \"./src/test/**/*.test.ts\"",
+    "build": "npm run tsc",
+    "start:watch": "nodemon -w ./src -x \"npm run start\" --ext \"*.ts\"",
+    "build:watch": "nodemon -w ./src -x \"npm run build\" --ext \"*.ts\"",
+    "test:watch": "nodemon -w ./src -x \"npm run test\" --ext \"*.ts\"",
+    "exec:watch": "nodemon -w ./dist -x \"npm run exec\"",
+    "dev": "nodemon -w ./src -x \"ts-node ./src/index.ts\" --ext \"*.ts\""
+  },
+  "dependencies": {
+    "@prisma/client": "5.7.1",
+    "@types/uuid": "^9.0.7",
+    "bee-queue": "^1.7.1",
+    "cron": "^3.1.6",
+    "discord.js": "14.x.x",
+    "dotenv": "^16.3.1",
+    "nodemon": "^3.0.2",
+    "slashasaurus": "^0.12.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-standard-with-typescript": "^43.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-prettier": "^5.1.1",
+    "eslint-plugin-promise": "^6.0.0",
+    "prettier": "3.1.1",
+    "prisma": "^5.7.1",
+    "typescript": "*"
+  }
+}
